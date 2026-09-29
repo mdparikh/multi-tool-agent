@@ -1,0 +1,141 @@
+name: Multi tool agent
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+
+jobs:
+
+  # ==========================================================
+  # CONTINUOUS INTEGRATION
+  # ==========================================================
+
+  ci:
+    name: Agent CI
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+
+      # -------------------------
+      # Python
+      # -------------------------
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      # -------------------------
+      # Node / Promptfoo
+      # -------------------------
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install Node dependencies
+        run: |
+          npm install
+
+      # -------------------------
+      # Promptfoo evaluation
+      # -------------------------
+
+      - name: Run Promptfoo evaluation
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          HFTOKEN: ${{ secrets.HF_TOKEN }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_HOST: ${{ secrets.LANGFUSE_HOST }}
+        run: |
+          npx promptfoo@latest eval \
+            -c promptfooconfig.yaml \
+            -o promptfoo-results.json \
+            -o promptfoo-report.html
+
+
+      # -------------------------
+      # Evaluation artifacts
+      # -------------------------
+
+      - name: Upload evaluation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-evaluation-results
+          path: |
+            promptfoo-results.json
+            promptfoo-report.html
+
+
+  # ==========================================================
+  # CONTINUOUS DEPLOYMENT
+  # ==========================================================
+
+  cd:
+    name: Deploy to Hugging Face Spaces
+
+    # CD cannot start unless ALL CI steps pass
+    needs: ci
+
+    # Deploy only on push to main.
+    # Pull requests run CI but do not deploy.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      # 2. Explicitly pull LFS files (ensures all LFS assets are completely downloaded)
+      - name: Fetch LFS files
+        run: git lfs pull
+
+      # 3. Set up Git LFS on the GitHub Actions runner
+      - name: Install Git LFS
+        run: |
+          git lfs install
+
+      - name: Install Git Xet
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://githubusercontent.com | sh
+          echo "$HOME/.xet/bin" >> $GITHUB_PATH
+          git xet install          
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Configure Git credentials for Hugging Face
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"   
+
+          # Add Hugging Face as a remote and force push
+          git remote add hf https://x-token:$HF_TOKEN@huggingface.co/spaces/leadingedge9/multi-tool-agent
+          git push --force hf main

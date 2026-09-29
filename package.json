@@ -1,0 +1,7 @@
+{
+  "name": "multi-tool-agent",
+  "private": true,
+  "devDependencies": {
+    "promptfoo": "latest"
+  }
+}

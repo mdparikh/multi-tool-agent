@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+langchain-google-genai
+langchain-groq
+pypdf
+huggingface_hub
+langchain
+langchain-community
+langchain-core
+langfuse
+chromadb
+tavily-python
+gradio
+pydantic
+spaces

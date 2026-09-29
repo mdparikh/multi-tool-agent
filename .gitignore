@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+promptfoo-results.json
+promptfoo-report.html
+.env
+*.md
+*.pptx
+!README.md
+chroma_db/
+company.db

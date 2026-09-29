@@ -1,0 +1,34 @@
+description: Enterprise multi tool agent with guardrails
+
+providers:
+  - id: exec:python promptfoo_provider.py
+    config:
+      env:
+        PYTHONUTF8: '1'
+        PYTHONIOENCODING: 'utf-8'
+    label: multi-tool-agent
+
+prompts:
+  - "{{question}}"
+
+tests:
+  - vars:
+      question: "What is the key concept behind transformers?"
+    assert:
+      - type: contains
+        value: "self-attention"
+        transform: output.toLowerCase()
+
+  - vars:
+      question: "Search for the key concept behind the recently released model 'Jev'"
+    assert:
+      - type: contains
+        value: "typesafe"
+        transform: output.toLowerCase()
+
+  - vars:
+      question: "who are all the employees in the company database"
+    assert:
+      - type: contains
+        value: "alice"
+        transform: output.toLowerCase()
