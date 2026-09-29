@@ -1,0 +1,39 @@
+name: CI/CD to Hugging Face Spaces
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          lfs: true 
+
+      - name: Fetch LFS files
+        run: git lfs pull
+
+      - name: Install Git Xet
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com | sh
+          echo "$HOME/.xet/bin" >> $GITHUB_PATH
+          # Force the current shell block to immediately recognize the new binary path
+          export PATH="$HOME/.xet/bin:$PATH"
+          git xet install
+
+      - name: Push to Hugging Face Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          
+          git remote add hf https://x-token:$HF_TOKEN@huggingface.co/spaces/leadingedge9/multi-tool-agent
+          git push --force hf main
+
+
+ 
