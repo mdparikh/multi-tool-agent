@@ -19,10 +19,16 @@ jobs:
 
       - name: Install Git Xet
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com | sh
-          echo "$HOME/.xet/bin" >> $GITHUB_PATH
-          # Force the current shell block to immediately recognize the new binary path
-          export PATH="$HOME/.xet/bin:$PATH"
+          # 1. Download the verified x86_64 Linux release binary from Hugging Face core repo
+          curl -L -o git-xet.tar.gz https://github.com
+          
+          # 2. Extract it
+          tar -xzf git-xet.tar.gz
+          
+          # 3. Move the binary directly into a standard system directory already in the path
+          sudo mv git-xet /usr/local/bin/
+          
+          # 4. Verify it works and register it with Git globally
           git xet install
 
       - name: Push to Hugging Face Spaces
