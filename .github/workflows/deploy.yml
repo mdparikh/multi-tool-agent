@@ -24,7 +24,10 @@ jobs:
           
           # Extract the naked executable
           unzip git-xet.zip
-          
+
+          # CRUCIAL: Make the file explicitly executable
+          chmod +x git-xet
+
           # Position it directly in system path execution scope 
           sudo mv git-xet /usr/local/bin/
           
