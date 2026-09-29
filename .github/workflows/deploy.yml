@@ -19,16 +19,16 @@ jobs:
 
       - name: Install Git Xet
         run: |
-          # 1. Download the verified x86_64 Linux release binary from Hugging Face core repo
-          curl -L -o git-xet.tar.gz https://github.com
+          # Download the official Linux x86_64 zip asset from the Hugging Face core repository
+          curl -L -o git-xet.zip https://github.com/huggingface/xet-core/releases/download/git-xet-v0.2.1/git-xet-linux-x86_64.zip
           
-          # 2. Extract it
-          tar -xzf git-xet.tar.gz
+          # Extract the naked executable
+          unzip git-xet.zip
           
-          # 3. Move the binary directly into a standard system directory already in the path
+          # Position it directly in system path execution scope 
           sudo mv git-xet /usr/local/bin/
           
-          # 4. Verify it works and register it with Git globally
+          # Verify system visibility and register hooks
           git xet install
 
       - name: Push to Hugging Face Spaces
